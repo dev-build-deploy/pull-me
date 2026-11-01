@@ -15,6 +15,7 @@ import { ResolvedConfig } from "./config.js";
 import { Diagnostic } from "./diagnostic.js";
 import { parseBody } from "./markdown.js";
 import { DEFAULT_REFERENCE_PATTERNS } from "./rules.js";
+import { compareVersions } from "./version.js";
 
 const run = promisify(execFile);
 
@@ -55,17 +56,6 @@ const HINTS: Record<string, string> = {
 
 /** Thrown when Vale cannot be found, downloaded or run. */
 export class ValeError extends Error {}
-
-/** Compares dotted versions: negative when a < b. */
-export function compareVersions(a: string, b: string): number {
-  const pa = a.replace(/^v/, "").split(".").map(Number);
-  const pb = b.replace(/^v/, "").split(".").map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (d !== 0) return d;
-  }
-  return 0;
-}
 
 /** The release archive suffix of this platform, as keyed in VALE_CHECKSUMS. */
 export function platformAsset(platform: string = process.platform, arch: string = process.arch): string {

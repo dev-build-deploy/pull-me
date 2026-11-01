@@ -21,6 +21,7 @@
     "build": "run-p build:* && npm run check:bundle",
     "check:bundle": "node scripts/check-bundle.mjs lib",
     "build:cli": "ncc build -o lib/cli src/entrypoints/cli.ts",
+    "build:action": "ncc build -o lib/action src/entrypoints/action.ts",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint --ext .ts src test",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

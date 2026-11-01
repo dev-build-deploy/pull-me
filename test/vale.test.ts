@@ -168,6 +168,7 @@ describe("running Vale", () => {
   test("abbreviations must be explained on first use, unless known", async () => {
     expect(await alerts("The DST switch is handled.")).toEqual(["1:Abbreviations:warning"]);
     expect(await alerts("The DST (daylight saving time) switch is handled.")).toEqual([]);
+    expect(await alerts("Daylight saving time (DST, one hour in summer) moves the DST switch.")).toEqual([]);
     expect(await alerts("The API and the CI are fine.")).toEqual([]);
     expect(await alerts("The KPI is fine.", resolveConfig({ vale: { abbreviations: ["KPI"] } }))).toEqual([]);
   });
