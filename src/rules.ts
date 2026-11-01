@@ -52,9 +52,13 @@ export const SECTION_PURPOSE: Record<string, string> = {
 const PLACEHOLDER = /^(todo|tbd|n\/a|na|-|\.\.\.|…|none|tba)\.?$/i;
 const LIST_MARKER = /^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/;
 
-/** References that count as no prose: an issue number (#12) and ids such as L99.1, E1, D12 or ABC-123. */
+/**
+ * References that count as no prose (PM003) and must not stand alone (Vale's BareReferences): an issue number (#12),
+ * "decision 4", and ids such as L99.1, E1, D12 or ABC-123.
+ */
 export const DEFAULT_REFERENCE_PATTERNS = [
   "(?<![\\w/&])#\\d+\\b",
+  "\\b[Dd]ecision \\d+\\b",
   "\\b[A-Z]\\d+(?:\\.\\d+)*\\b",
   "\\b[A-Z]{2,10}-\\d+\\b",
 ];
