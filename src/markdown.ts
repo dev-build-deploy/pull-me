@@ -79,7 +79,7 @@ export function parseBody(body: string): ParsedBody {
     } else if (FENCE.test(text)) {
       kind = "fence";
       fence = FENCE.exec(text)?.[1];
-    } else if (trimmed.startsWith("<!--") && trimmed.replace(/<!--[\s\S]*?-->/g, "").trim() === "") {
+    } else if (trimmed.startsWith("<!--") && stripInlineComments(trimmed).trim() === "") {
       kind = "comment";
     } else if (trimmed.startsWith("<!--") && !trimmed.includes("-->")) {
       kind = "comment";
@@ -116,7 +116,13 @@ export function authorLines(section: Section): BodyLine[] {
   return section.lines.filter(l => l.kind !== "comment" && l.kind !== "generated" && l.text.trim() !== "");
 }
 
-/** Removes inline HTML comments from a line of text. */
+/** Removes inline HTML comments from a line of text, until none is left (a removal can join two halves into one). */
 export function stripInlineComments(text: string): string {
-  return text.replace(/<!--[\s\S]*?-->/g, "");
+  let previous: string;
+  let current = text;
+  do {
+    previous = current;
+    current = current.replace(/<!--[\s\S]*?-->/g, "");
+  } while (current !== previous);
+  return current;
 }

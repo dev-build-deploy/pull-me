@@ -102,6 +102,7 @@ describe("PM004", () => {
     ["a fenced block with commands only", "```\n$ npm test\n$ npm run lint\n```"],
     ["a link to a pull request", "https://github.com/o/r/pull/5"],
     ["a link to another site", "https://ci.example.com/build/42"],
+    ["a run link inside another site's URL", "https://evil.example/?u=https://github.com/o/r/actions/runs/123"],
     ["an image in a comment", "It works. <!-- ![shot](https://github.com/user-attachments/assets/abc) -->"],
   ])("%s is not evidence", (_, proof) => {
     expect(rules(withProof(proof))).toEqual(["PM004:error"]);

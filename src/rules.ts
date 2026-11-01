@@ -61,9 +61,12 @@ export const DEFAULT_REFERENCE_PATTERNS = [
 
 const IMAGE_MD = /!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g;
 const IMAGE_HTML = /<img\b[^>]*?\bsrc\s*=\s*["']?([^"'\s>]+)/gi;
-const RUN_LINK =
-  /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/(?:actions\/runs\/\d+(?:\/job\/\d+)?|runs\/\d+|pull\/\d+\/checks\?check_run_id=\d+)/;
-const ARTIFACT_LINK = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/\d+\/artifacts\/\d+/;
+/** A link to a GitHub Actions run, job or check run. Anchored: it is matched against one URL at a time. */
+export const RUN_LINK =
+  /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/(?:actions\/runs\/\d+(?:\/(?:job|attempts)\/\d+)*\/?(?:[?#].*)?$|runs\/\d+\/?(?:[?#].*)?$|pull\/\d+\/checks\?(?:.*&)?check_run_id=\d+)/;
+/** A link to an artifact of a GitHub Actions run. */
+export const ARTIFACT_LINK = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/\d+\/artifacts\/\d+\/?$/;
+const URL_IN_TEXT = /https?:\/\/[^\s<>()[\]"'`]+/g;
 const REMOTE = /^https?:\/\//i;
 
 /** The input of a structure check. */
@@ -123,6 +126,11 @@ function isAttached(src: string, attachments: string[]): boolean {
   return attachments.some(a => a.replace(/^\.\//, "") === clean || a.endsWith(`/${clean}`));
 }
 
+/** The URLs in a line of text, without trailing punctuation. */
+export function linksOf(text: string): string[] {
+  return [...text.matchAll(URL_IN_TEXT)].map(m => m[0].replace(/[.,;:!?]+$/, ""));
+}
+
 /** Whether a section's lines hold evidence of the kinds the configuration allows (PM004). */
 export function hasEvidence(lines: BodyLine[], config: ResolvedConfig, attachments: string[] = []): boolean {
   const proof = config.sections.Proof;
@@ -147,9 +155,11 @@ export function hasEvidence(lines: BodyLine[], config: ResolvedConfig, attachmen
     const text = stripInlineComments(line.text);
     if (kinds.has("image") && imagesOf(text).some(i => REMOTE.test(i.src) || isAttached(i.src, attachments)))
       return true;
-    if (kinds.has("artifact-link") && ARTIFACT_LINK.test(text)) return true;
-    if (kinds.has("run-link") && RUN_LINK.test(text)) return true;
-    if (extra.some(p => p.test(text))) return true;
+    for (const url of linksOf(text)) {
+      if (kinds.has("artifact-link") && ARTIFACT_LINK.test(url)) return true;
+      if (kinds.has("run-link") && RUN_LINK.test(url)) return true;
+      if (extra.some(p => p.test(url))) return true;
+    }
   }
   // An unclosed fence runs to the end of the body, as CommonMark reads it.
   return inBlock && blockHasOutput && kinds.has("fenced-block");
