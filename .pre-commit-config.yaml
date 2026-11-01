@@ -6,13 +6,13 @@
 
 repos:
 - repo: https://github.com/dev-build-deploy/commit-me
-  rev: v2.0.0
+  rev: v2.1.1
   hooks:
   - id: commit-me
     args: ['--config', '.github/.commit-me.json']
 
 - repo: https://github.com/dev-build-deploy/reuse-me
-  rev: v1.1.0
+  rev: v1.2.1
   hooks:
   - id: reuse-me
 
