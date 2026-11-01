@@ -9,9 +9,18 @@ on:
   pull_request:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   check-lib:
     name: Check Lib/ Directory
     uses: actions/reusable-workflows/.github/workflows/check-dist.yml@main
     with:
       dist-path: ./lib
+
+  check-plugin-bundle:
+    name: Check Claude plugin bundle
+    uses: actions/reusable-workflows/.github/workflows/check-dist.yml@main
+    with:
+      dist-path: ./claude-plugin/bundle

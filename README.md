@@ -52,6 +52,17 @@ A draft pull request gets warnings only. Errors fail the check, so it can be a r
 newer), which uploads the file to GitHub's attachment store: no branch, no commit. A screenshot made in CI goes up as
 an Actions artifact instead, and Proof links to that artifact.
 
+## Claude Code plugin
+
+A [Claude Code](https://claude.com/claude-code) plugin checks the body of `gh pr create` and `gh pr edit` before
+they run, and denies a description with errors. It adds a `writing-pull-requests` skill. See the
+[plugin document](./docs/claude-plugin.md).
+
+```text
+/plugin marketplace add dev-build-deploy/claude-plugins
+/plugin install pull-me@dev-build-deploy
+```
+
 ## Configuration
 
 PullMe reads `.pull-me.json` or `.github/.pull-me.json`. See the [configuration document](./docs/config.md).
