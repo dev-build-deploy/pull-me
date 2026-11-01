@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Kevin de Jong <monkaii@hotmail.com>
+# SPDX-License-Identifier: CC0-1.0
+
+---
+
+name: Pull request description
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read        # Required to read .pull-me.json and the glossary
+  pull-requests: write  # Required for the sticky comment while the check fails
+  actions: read         # Required to verify links to workflow runs (PM006)
+  checks: read          # Required to verify links to check runs (PM006)
+
+jobs:
+  pull-me:
+    name: PullMe (pull-me checks itself)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./
+        with:
+          token: ${{ github.token }}

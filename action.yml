@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2026 Kevin de Jong <monkaii@hotmail.com>
+# SPDX-License-Identifier: MIT
+
+name: 'PullMe - pull request descriptions with proof'
+author: 'Kevin de Jong'
+description: >
+  Check that a pull request description has the Why, How, Review hints and Proof sections, that Proof holds real
+  evidence, and that the prose is plain (Vale).
+
+branding:
+  icon: 'check-square'
+  color: 'white'
+
+inputs:
+  token:
+    description: 'GitHub token (eg. github.token): for the sticky comment (pull-requests: write) and for verifying run links (actions: read, checks: read).'
+    required: false
+    default: ${{ github.token }}
+
+  config:
+    description: 'Path to the configuration file; by default ".pull-me.json", then ".github/.pull-me.json".'
+    required: false
+
+  comment:
+    description: '"on-failure" (one comment while the check fails, deleted once it passes) or "never"; overrides githubAction.comment.'
+    required: false
+
+  verify-run-links:
+    description: 'Look up each linked run and warn when it is in another repository or did not succeed (PM006); overrides githubAction.verifyRunLinks.'
+    required: false
+
+outputs:
+  errors:
+    description: 'The number of errors.'
+  warnings:
+    description: 'The number of warnings.'
+
+runs:
+  using: 'node24'
+  main: 'lib/action/index.js'
