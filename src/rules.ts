@@ -52,9 +52,13 @@ export const SECTION_PURPOSE: Record<string, string> = {
 const PLACEHOLDER = /^(todo|tbd|n\/a|na|-|\.\.\.|…|none|tba)\.?$/i;
 const LIST_MARKER = /^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/;
 
-/** References that count as no prose: an issue number (#12) and ids such as L99.1, E1, D12 or ABC-123. */
+/**
+ * References that count as no prose (PM003) and must not stand alone (Vale's BareReferences): an issue number (#12),
+ * "decision 4", and ids such as L99.1, E1, D12 or ABC-123.
+ */
 export const DEFAULT_REFERENCE_PATTERNS = [
   "(?<![\\w/&])#\\d+\\b",
+  "\\b[Dd]ecision \\d+\\b",
   "\\b[A-Z]\\d+(?:\\.\\d+)*\\b",
   "\\b[A-Z]{2,10}-\\d+\\b",
 ];
@@ -113,8 +117,10 @@ export function proseOf(lines: BodyLine[], referencePatterns: RegExp[]): string 
     .trim();
 }
 
-/** The images of a line, markdown and HTML, with their 1-based column. */
-function imagesOf(text: string): { src: string; column: number }[] {
+/** The images of a line, Markdown and HTML, with their 1-based column; code spans are skipped. */
+function imagesOf(line: string): { src: string; column: number }[] {
+  // An image inside a code span is an example, not an image: blank the spans, keeping the columns.
+  const text = line.replace(/`+[^`]*`+/g, span => " ".repeat(span.length));
   const out: { src: string; column: number }[] = [];
   for (const m of text.matchAll(IMAGE_MD)) out.push({ src: m[2], column: (m.index ?? 0) + 1 });
   for (const m of text.matchAll(IMAGE_HTML)) out.push({ src: m[1], column: (m.index ?? 0) + 1 });

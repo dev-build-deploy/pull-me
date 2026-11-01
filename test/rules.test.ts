@@ -127,6 +127,9 @@ describe("PM005", () => {
   test("an image that is also given to --attach counts and is not local", () => {
     expect(rules(body, { attachments: ["screenshots/overview.png"] })).toEqual([]);
   });
+  test("an image inside a code span is an example, not an image", () => {
+    expect(rules(GOOD.replace("Read `limiter.ts` first.", "Write `![alt](./shot.png)` first."))).toEqual([]);
+  });
   test("a trailing pull-me-ignore comment skips the rule on that line", () => {
     const ignored = body.replace(".png)", ".png) <!-- pull-me-ignore PM005 -->");
     expect(rules(ignored)).toEqual(["PM004:error"]);
