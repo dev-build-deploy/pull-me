@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2026 Kevin de Jong <monkaii@hotmail.com>
+# SPDX-License-Identifier: CC0-1.0
+
+# Install with `pre-commit install --hook-type pre-commit --hook-type commit-msg`
+# (npm projects do this on `npm install`).
+
+repos:
+- repo: https://github.com/dev-build-deploy/commit-me
+  rev: v2.0.0
+  hooks:
+  - id: commit-me
+    args: ['--config', '.github/.commit-me.json']
+
+- repo: https://github.com/dev-build-deploy/reuse-me
+  rev: v1.1.0
+  hooks:
+  - id: reuse-me
+
+# Lints .github/workflows. `actionlint-system` runs the actionlint on your PATH: `brew install actionlint`.
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.12
+  hooks:
+  - id: actionlint-system
+
+# Local checks: each prevents a CI failure the other -me tools have had.
+- repo: local
+  hooks:
+  # The committed bundles must be what the staged source builds to (also fails when
+  # ncc stubs an ESM-only package, see scripts/check-bundle.mjs).
+  - id: check-lib
+    name: lib is rebuilt from the staged source
+    entry: node scripts/check-lib.mjs lib
+    language: system
+    files: ^(src/|package\.json$|package-lock\.json$|tsconfig\.json$)
+    pass_filenames: false
+  # Dependabot's commit messages must pass .github/.commit-me.json.
+  - id: check-dependabot
+    name: dependabot.yml commit messages are allowed by .commit-me.json
+    entry: node scripts/check-dependabot.mjs
+    language: system
+    files: ^\.github/(dependabot\.yml|\.commit-me\.json)$
+    pass_filenames: false
+  # The bin wrapper must still load the bundles (an ESM bundle cannot be `require`d).
+  - id: smoke-bin
+    name: bin/pull-me runs
+    entry: node scripts/smoke-bin.mjs
+    language: system
+    files: ^(bin/|lib/|package\.json$)
+    pass_filenames: false
