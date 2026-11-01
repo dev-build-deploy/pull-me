@@ -175,6 +175,7 @@ describe("running Vale", () => {
   test("glossary terms must be explained on first use; repository terms are added", async () => {
     expect(await alerts("We bundle it with ncc now.")).toEqual(["1:Glossary:warning"]);
     expect(await alerts("We bundle it with ncc (a bundler for Node.js) now.")).toEqual([]);
+    expect(await alerts("We bundle it with ncc, a bundler for Node.js, and ncc is fast.")).toEqual([]);
     fs.mkdirSync(path.join(root, ".github"), { recursive: true });
     fs.writeFileSync(path.join(root, ".github", "glossary.md"), "- **beat**: a step of the story\n");
     const [d] = await runVale("The beat ends here.", resolveConfig(), root, vale);
