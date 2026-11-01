@@ -117,8 +117,10 @@ export function proseOf(lines: BodyLine[], referencePatterns: RegExp[]): string 
     .trim();
 }
 
-/** The images of a line, markdown and HTML, with their 1-based column. */
-function imagesOf(text: string): { src: string; column: number }[] {
+/** The images of a line, Markdown and HTML, with their 1-based column; code spans are skipped. */
+function imagesOf(line: string): { src: string; column: number }[] {
+  // An image inside a code span is an example, not an image: blank the spans, keeping the columns.
+  const text = line.replace(/`+[^`]*`+/g, span => " ".repeat(span.length));
   const out: { src: string; column: number }[] = [];
   for (const m of text.matchAll(IMAGE_MD)) out.push({ src: m[2], column: (m.index ?? 0) + 1 });
   for (const m of text.matchAll(IMAGE_HTML)) out.push({ src: m[1], column: (m.index ?? 0) + 1 });

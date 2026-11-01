@@ -20,6 +20,9 @@ exceptions:
   - HTTPS
   - ID
   - JSON
+  - KB
+  - MB
+  - GB
   - MIT
   - OK
   - PR
