@@ -19,14 +19,16 @@
   },
   "scripts": {
     "build": "run-p build:* && npm run check:bundle",
-    "check:bundle": "node scripts/check-bundle.mjs lib",
+    "check:bundle": "node scripts/check-bundle.mjs lib claude-plugin/bundle",
     "build:cli": "ncc build -o lib/cli src/entrypoints/cli.ts",
     "build:action": "ncc build -o lib/action src/entrypoints/action.ts",
+    "build:plugin": "ncc build -o claude-plugin/bundle src/entrypoints/cli.ts && node scripts/copy-vale.mjs claude-plugin/bundle/vale",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint --ext .ts src test",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "prepare": "node -e \"if(process.env.CI)process.exit(0);const r=require('child_process').spawnSync('pre-commit',['install','--hook-type','pre-commit','--hook-type','commit-msg'],{stdio:'inherit'});if(r.error)console.log('hint: install pre-commit (https://pre-commit.com) to get the git hooks')\"",
-    "test:bin": "node scripts/smoke-bin.mjs"
+    "test:bin": "node scripts/smoke-bin.mjs",
+    "test:plugin": "claude plugin test claude-plugin"
   },
   "bin": {
     "pull-me": "./bin/pull-me"

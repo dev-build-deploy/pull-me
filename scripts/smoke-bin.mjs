@@ -17,6 +17,8 @@ const cases = [
   { args: ["bin/pull-me", "check", "--body-file", fail, "--no-vale"], exit: 1, output: /\[PM005\]/ },
   { args: ["bin/pull-me", "check", "--stdin", "--format", "json", "--no-vale"], input: "## Why\n", exit: 1, output: /"errors":4/ },
   { args: ["bin/pull-me", "check", "--body-file", pass, "--stdin"], exit: 2, output: /exactly one of/ },
+  // The Claude plugin's call: its own bundle, which must find its own copy of the Vale configuration.
+  { args: ["claude-plugin/bundle/index.js", "check", "--stdin", "--format", "hook"], input: "## Why\n", exit: 1, output: /"errors":4/ },
 ];
 
 let failed = false;

@@ -29,9 +29,9 @@ repos:
   # ncc stubs an ESM-only package, see scripts/check-bundle.mjs).
   - id: check-lib
     name: lib is rebuilt from the staged source
-    entry: node scripts/check-lib.mjs lib
+    entry: node scripts/check-lib.mjs lib claude-plugin/bundle
     language: system
-    files: ^(src/|package\.json$|package-lock\.json$|tsconfig\.json$)
+    files: ^(src/|vale/|package\.json$|package-lock\.json$|tsconfig\.json$)
     pass_filenames: false
   # Dependabot's commit messages must pass .github/.commit-me.json.
   - id: check-dependabot

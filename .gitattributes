@@ -5,3 +5,4 @@
 package-lock.json -diff
 lib/**/index.js -diff
 /claude-plugin/bundle/** linguist-generated=true -diff
+/claude-plugin/bundle/** linguist-generated=true -diff

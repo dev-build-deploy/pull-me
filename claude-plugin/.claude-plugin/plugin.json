@@ -1,0 +1,8 @@
+{
+  "name": "pull-me",
+  "version": "0.1.0",
+  "description": "Claude Code companion of PullMe: denies a gh pr create or gh pr edit whose description misses Why, How, Review hints or Proof, or whose Proof has no evidence; warns once about prose a junior engineer would struggle with (Vale)",
+  "author": { "name": "Kevin de Jong" },
+  "homepage": "https://github.com/dev-build-deploy/pull-me",
+  "license": "MIT"
+}
