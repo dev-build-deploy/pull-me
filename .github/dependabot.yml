@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 Kevin de Jong <monkaii@hotmail.com>
+# SPDX-License-Identifier: CC0-1.0
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "production"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      lint-and-typescript:
+        # eslint, typescript-eslint and typescript share peer-dependency ranges
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "typescript"
+      octokit:
+        patterns:
+          - "@octokit/*"
+      actions-toolkit:
+        patterns:
+          - "@actions/*"
