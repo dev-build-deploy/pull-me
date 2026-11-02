@@ -15,6 +15,10 @@ Files: package*.json
 Copyright: 2026 Kevin de Jong <monkaii@hotmail.com>
 License: CC0-1.0
 
+Files: vale/.vale.ini
+Copyright: 2026 Kevin de Jong <monkaii@hotmail.com>
+License: MIT
+
 Files: claude-plugin/.claude-plugin/plugin.json
        claude-plugin/hooks/hooks.json
        claude-plugin/skills/**
