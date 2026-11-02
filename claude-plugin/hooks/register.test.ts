@@ -3,7 +3,7 @@
 
 import { expect, test } from 'claude-code/testing'
 
-import { bodyHash, parsePrCommand } from './register'
+import { bodyHash, parsePrCommand, resolvePath, shellExpands } from './register'
 
 const ROOT = '/private/tmp/pull-me-plugin-test'
 
@@ -84,6 +84,26 @@ test('a body file is read from the session folder; a heredoc body is checked', a
   expect((await t.call(subst)).reached).toBeUndefined()
 })
 
+test('a body file in a shell variable or after cd is never let through unchecked', async ($, on) => {
+  const t = await setup($, on, { files: { [`${ROOT}/sub/body.md`]: NO_PROOF, '/abs/body.md': NO_PROOF } })
+  // the shell expands $S before gh reads it: the hook cannot read it, so it asks for the path written out
+  const variable = await t.call('S=/abs; gh pr create -t x --body-file $S/body.md')
+  expect(variable.reached).toBeUndefined()
+  expect(variable.text).toContain('expanded by the shell')
+  expect((await t.call('gh pr edit 3 --body-file ~/body.md')).reached).toBeUndefined()
+  expect((await t.call('cd $HOME && gh pr edit 3 -F body.md')).reached).toBeUndefined()
+  // a relative path after cd is read from that folder, and checked
+  const cd = await t.call('cd sub && gh pr create -t x -F body.md')
+  expect(cd.reached).toBeUndefined()
+  expect(cd.text).toContain('[PM001]')
+  expect((await t.call('cd /elsewhere && gh pr create -t x -F /abs/body.md')).text).toContain('[PM001]')
+  // a file that cannot be read is denied, not passed unchecked
+  const missing = await t.call('gh pr create -t x -F nope.md')
+  expect(missing.reached).toBeUndefined()
+  expect(missing.text).toContain('cannot read the body file')
+  expect(t.runs).toHaveLength(2)
+})
+
 test('--fill is denied, and so is gh pr create without a body', async ($, on) => {
   const t = await setup($, on)
   expect((await t.call('gh pr create --fill')).text).toContain('--fill takes the description from the commits')
@@ -130,7 +150,13 @@ test('parsePrCommand reads the flags', () => {
     attach: ['a.png'],
     fill: false,
     web: false,
+    cd: 'x',
   })
+  expect(parsePrCommand('cd /a && cd b/c; gh pr edit 3 -F d.md')?.cd).toBe('/a/b/c')
   expect(parsePrCommand('gh pr list')).toBeUndefined()
+  expect(shellExpands('$S/body.md')).toBe(true)
+  expect(shellExpands('~/body.md')).toBe(true)
+  expect(shellExpands('/tmp/body.md')).toBe(false)
+  expect(resolvePath('/a/b', '../c/./d.md')).toBe('/a/c/d.md')
   expect(bodyHash('a')).not.toBe(bodyHash('b'))
 })

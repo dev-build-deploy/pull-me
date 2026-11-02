@@ -19,6 +19,24 @@ export type PrCommand = {
   attach: string[]
   fill: boolean
   web: boolean
+  /** The folder of the last `cd <dir>` before gh in the same command line (relative paths resolve from there). */
+  cd?: string
+}
+
+/** True when the shell would change this word before gh sees it: a variable, a command substitution, a ~ or a glob. */
+export function shellExpands(word: string): boolean {
+  return /[$`*?[]/.test(word) || word.startsWith('~')
+}
+
+/** Joins a folder and a path the way the shell would resolve it (an absolute path stays as it is). */
+export function resolvePath(base: string, path: string): string {
+  if (path.startsWith('/')) return path
+  const parts = base.split('/')
+  for (const p of path.split('/')) {
+    if (p === '..') parts.pop()
+    else if (p !== '.' && p !== '') parts.push(p)
+  }
+  return parts.join('/') || '/'
 }
 
 // gh at the start of a command: the line start, or after ;, &&, ||, |, ( or a newline (not `echo gh pr create`).
@@ -70,6 +88,13 @@ export function parsePrCommand(command: string): PrCommand | undefined {
   if (!m) return undefined
   const rest = command.slice(m.index + m[0].length)
   const pr: PrCommand = { action: m[1] as 'create' | 'edit', draft: false, attach: [], fill: false, web: false }
+  // A `cd <dir>` earlier on the line moves the folder gh reads a relative body file from. (GH_PR's match starts at
+  // the operator before gh, so the part before it may end in a single & of the && that joined them.)
+  const before = command.slice(0, m.index)
+  for (const c of before.matchAll(/(?:^|[;&|(\n])\s*cd\s+([^;&|\n]+?)\s*(?=[;&|\n]|$)/g)) {
+    const dir = words(c[1])[0]
+    if (dir !== undefined) pr.cd = pr.cd !== undefined && !dir.startsWith('/') ? resolvePath(pr.cd, dir) : dir
+  }
 
   // A heredoc body: --body "$(cat <<'EOF' ... EOF)" or --body-file - <<'EOF' ... EOF
   const heredoc = HEREDOC.exec(rest)
@@ -162,10 +187,22 @@ export const register: Register = on => {
     const cwd = await $.session.cwd()
     let body = pr.body
     if (body === undefined && pr.bodyFile && pr.bodyFile !== '-') {
+      // The shell expands a variable, ~ or glob before gh reads the file, but this hook sees the raw text: it would
+      // read the wrong file, or none, and let an unchecked body through. Ask for the path written out instead.
+      const relative = !pr.bodyFile.startsWith('/') && !pr.bodyFile.startsWith('~')
+      if (shellExpands(pr.bodyFile) || (relative && pr.cd !== undefined && shellExpands(pr.cd))) {
+        return {
+          deny: `pull-me: the body file's path "${pr.bodyFile}"${relative && pr.cd ? ` (after cd ${pr.cd})` : ''} is expanded by the shell, so pull-me cannot read the file to check it. ${NOTHING}\nWrite the path out in full (an absolute path, no $VARIABLE, ~ or glob), or pass the body in a heredoc: --body-file - <<'EOF'.`,
+        }
+      }
+      const path = resolvePath(pr.cd !== undefined ? resolvePath(cwd, pr.cd) : cwd, pr.bodyFile)
       try {
-        body = await $.fs.read(pr.bodyFile.startsWith('/') ? pr.bodyFile : `${cwd}/${pr.bodyFile}`)
+        body = await $.fs.read(path)
       } catch {
-        return next(e) // gh reports an unreadable file itself
+        // gh would fail on a missing file too; an unreadable one must not slip through unchecked.
+        return {
+          deny: `pull-me: cannot read the body file ${path}, so the description was not checked. ${NOTHING}\nCheck the path (an absolute path is safest), or pass the body in a heredoc: --body-file - <<'EOF'.`,
+        }
       }
     }
     if (body === undefined || body.includes('$(')) {
