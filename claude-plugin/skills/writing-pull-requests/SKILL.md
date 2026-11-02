@@ -72,4 +72,7 @@ The links stay, as extras.
 - `gh pr create --fill` is denied (a body from commits has no sections), and so is `gh pr create` without a body.
 - Write the body to a file and pass `--body-file`, or use a heredoc (`--body-file - <<'EOF'`): long bodies in
   `--body "..."` are easy to break with quotes.
+- Write the body file's path out in full: `--body-file /abs/path/body.md`, not `--body-file $DIR/body.md` or
+  `~/body.md`. The hook reads the file before the shell expands the path, so it denies a path with a variable, `~`
+  or a glob (and a file it cannot read) rather than let an unchecked body through.
 - Check a body yourself first with `pull-me check --body-file body.md --title "<title>"`.
